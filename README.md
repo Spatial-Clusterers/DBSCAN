@@ -6,3 +6,6 @@ This repository is an implementation of the spatial clustering algorithm DBSCAN 
 CPSC 5210 Research Project at the University of Tennessee at Chattanooga.
 
 Sean Baskin
+
+TODO
+* Add Point Class
