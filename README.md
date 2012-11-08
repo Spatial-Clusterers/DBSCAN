@@ -10,10 +10,10 @@ CPSC 5210 Research Project at the University of Tennessee at Chattanooga.
 ## NOTES
 
 Install the Python Package Index
-'sudo apt-get install python-pip'
+    sudo apt-get install python-pip
 
 Install the C++ libspatialindex library
-'sudo apt-get install libspatialindex-dev'
+    sudo apt-get install libspatialindex-dev
 
 Install RTree package
-'sudo pip install Rtree'
+    sudo pip install Rtree
