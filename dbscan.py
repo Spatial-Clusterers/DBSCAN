@@ -1,21 +1,99 @@
 '''
-Function: DBSCAN
-Description: 
-
-param D
-	The input dataset.
-param epsilon
-	The neighborhood value.
-param minimumPoints
-	The minimum number of points required to form a cluster. 
+TODO: Remove duplicates from input dataset
 '''
 
+from random import randrange
+from rtree import index
+from math import sqrt
+import csv
 import sys
 
-import numpy
+class DBSCAN:
+	
+	def __init__(self, fileName):
+		'TODO: Add function description.'
 
-def DBSCAN(D, epsilon, minimumPoints):
-	# Set the cluster ID to zero
-	clusterID = 0
-	# For each unvisitied point P in dataset D
-	for point in D:
+		self.file = open(fileName, 'rt')
+		self.hail_data = []
+		self.coords = []
+
+		# Create a 2D index
+		p = index.Property()
+		p.dimension = 2
+		self.idx2d = idx2d = index.Index(properties=p)
+
+	def importDataSet(self):
+		'Import the data set into a list of lists.'
+
+		# Read lines into list container
+		try:
+			reader = csv.reader(self.file)
+			# Add each record to 
+			for row in reader:
+				self.hail_data.append(row)
+
+		finally:
+			# Close the file
+			self.file.close()
+
+	def indexDataSet(self):
+		'TODO: Add function description.'
+
+		# Index CSV data
+		for record in self.hail_data:
+			# Cast ID to integer
+			id = int(record[0])
+			# Add set of coordinate points
+			## print(record[16] + "," + record[17])
+			coord = (float(record[16]), float(record[17]))
+			# Add to list of coordinates
+			self.coords.append(coord)
+			# Add to the R*-Tree
+			self.idx2d.add(id, coord)
+
+	def calculateANN(self):
+		'TODO: Add function description.'
+
+		dsum = 0
+		# Find closest pair for the first 10 points
+		for id1 in range(len(self.coords)):
+			#
+		    nearest = list(self.idx2d.nearest(self.coords[id1], 2))
+		   # print("nearest: " + str(nearest))
+		   # print("coords[id1]: " + str(self.coords[id1]))
+		   # print("id1: " + str(id1))
+		   # print("nearest[0] = " + str(nearest[0]))
+		    #
+		    #assert id1 == nearest[0]
+		    #
+		    id2 = nearest[1]
+		    #
+		    c1 = self.coords[id1]
+		    #
+		    c2 = self.coords[id2]
+		    # Pythagorean theorem
+		    dist = sqrt(sum([(a - b)**2 for a, b in zip(c1, c2)]))
+		    # Add distance to sum
+		    dsum += dist
+		    # Display the result
+		    # print '%i <-> %i : %.1f'%(id1, id2, dist)
+
+		# Calculate the ANN
+		average = dsum / len(self.coords)
+		# Display the result
+		print('Average nearest neighbor: ' + str(average))
+
+	def dbscan(self):
+		'TODO: Add description'
+		
+	def expandCluster(self):
+		'TODO: Add description'
+
+# Instantiate a DBSCAN object
+test = DBSCAN("/home/sean/academic/utc/f2012/cpsc_5210/research-project/dataset/noaa-hail-cleaned-index.csv")
+# Import the dataset
+test.importDataSet()
+# Index the dataset
+test.indexDataSet()
+# Calculate the ANN
+test.calculateANN()
