@@ -1,99 +1,109 @@
-'''
-TODO: Remove duplicates from input dataset
-'''
+# -*- coding: utf-8 -*-
 
-from random import randrange
-from rtree import index
-from math import sqrt
+# A Density-Based Algorithm for Discovering Clusters in Large Spatial Databases with Noise
+# Martin Ester, Hans-Peter Kriegel, Jörg Sander, Xiaowei Xu
+# dbscan: density based spatial clustering of applications with noise
+
+import numpy as np
+import math
 import csv
 import sys
 
-class DBSCAN:
-	
-	def __init__(self, fileName):
-		'TODO: Add function description.'
+UNCLASSIFIED = False
+NOISE = None
+cids = []
 
-		self.file = open(fileName, 'rt')
-		self.hail_data = []
-		self.coords = []
+def _dist(p,q):
+	return math.sqrt(np.power(p-q,2).sum())
 
-		# Create a 2D index
-		p = index.Property()
-		p.dimension = 2
-		self.idx2d = idx2d = index.Index(properties=p)
+def _eps_neighborhood(p,q,eps):
+	return _dist(p,q) < eps
 
-	def importDataSet(self):
-		'Import the data set into a list of lists.'
+def _region_query(m, point_id, eps):
+    n_points = m.shape[1]
+    seeds = []
+    for i in range(0, n_points):
+        if not i == point_id:
+            if _eps_neighborhood(m[:,point_id], m[:,i], eps):
+                seeds.append(i)
+    return seeds
 
-		# Read lines into list container
-		try:
-			reader = csv.reader(self.file)
-			# Add each record to 
-			for row in reader:
-				self.hail_data.append(row)
+def _expand_cluster(m, classifications, point_id, cluster_id, eps, min_points):
+    seeds = _region_query(m, point_id, eps)
+    if len(seeds) < min_points:
+        classifications[point_id] = NOISE
+        return False
+    else:
+        classifications[point_id] = cluster_id
+        for seed_id in seeds:
+            classifications[seed_id] = cluster_id
+            
+        while len(seeds) > 0:
+            current_point = seeds[0]
+            results = _region_query(m, current_point, eps)
+            if len(results) >= min_points:
+                for i in range(0, len(results)):
+                    result_point = results[i]
+                    if classifications[result_point] == UNCLASSIFIED or \
+                       classifications[result_point] == NOISE:
+                        if classifications[result_point] == UNCLASSIFIED:
+                            seeds.append(result_point)
+                        classifications[result_point] = cluster_id
+            seeds = seeds[1:]
+        return True
+        
+def dbscan(m, eps, min_points):
+    """Implementation of Density Based Spatial Clustering of Applications with Noise
+    See https://en.wikipedia.org/wiki/DBSCAN
+    
+    scikit-learn probably has a better implementation
+    
+    Uses Euclidean Distance as the measure
+    
+    Inputs:
+    m - A matrix whose columns are feature vectors
+    eps - Maximum distance two points can be to be regionally related
+    min_points - The minimum number of points to make a cluster
+    
+    Outputs:
+    An array with either a cluster id number or dbscan.NOISE (None) for each
+    column vector in m.
+    """
+    cluster_id = 1
+    n_points = m.shape[1]
+    classifications = [UNCLASSIFIED] * n_points
+    for point_id in range(0, n_points):
+        point = m[:,point_id]
+        if classifications[point_id] == UNCLASSIFIED:
+            if _expand_cluster(m, classifications, point_id, cluster_id, eps, min_points):
+                cluster_id = cluster_id + 1
+    for classifcation in classifications:
+        cids.append(classifcation)
 
-		finally:
-			# Close the file
-			self.file.close()
+    return classifications
 
-	def indexDataSet(self):
-		'TODO: Add function description.'
+def test_dbscan():
+    m = np.asmatrix(np.loadtxt('noaa-hail-cleaned-100-coords-dbscan.csv', delimiter=","))
+    eps = 0.99
+    min_points = 4
+    # Transpose coordinate matrix
+    q = np.transpose(m)
+    print(dbscan(q, eps, min_points))
 
-		# Index CSV data
-		for record in self.hail_data:
-			# Cast ID to integer
-			id = int(record[0])
-			# Add set of coordinate points
-			## print(record[16] + "," + record[17])
-			coord = (float(record[16]), float(record[17]))
-			# Add to list of coordinates
-			self.coords.append(coord)
-			# Add to the R*-Tree
-			self.idx2d.add(id, coord)
+    coords = np.array(m).tolist()
 
-	def calculateANN(self):
-		'TODO: Add function description.'
+    i = 0
+    for coord in coords:
+        coord.append(str(cids[i]))
+        i += 1
 
-		dsum = 0
-		# Find closest pair for the first 10 points
-		for id1 in range(len(self.coords)):
-			#
-		    nearest = list(self.idx2d.nearest(self.coords[id1], 2))
-		   # print("nearest: " + str(nearest))
-		   # print("coords[id1]: " + str(self.coords[id1]))
-		   # print("id1: " + str(id1))
-		   # print("nearest[0] = " + str(nearest[0]))
-		    #
-		    #assert id1 == nearest[0]
-		    #
-		    id2 = nearest[1]
-		    #
-		    c1 = self.coords[id1]
-		    #
-		    c2 = self.coords[id2]
-		    # Pythagorean theorem
-		    dist = sqrt(sum([(a - b)**2 for a, b in zip(c1, c2)]))
-		    # Add distance to sum
-		    dsum += dist
-		    # Display the result
-		    # print '%i <-> %i : %.1f'%(id1, id2, dist)
+    #print(coords)
 
-		# Calculate the ANN
-		average = dsum / len(self.coords)
-		# Display the result
-		print('Average nearest neighbor: ' + str(average))
+    # Open results output file
+    outFile = open("noaa-hail-dbscan-classified.csv", 'wb')
+    resultWriter = csv.writer(outFile, delimiter=",")
+    
+    for coord in coords:
+        resultWriter.writerow(coord)
 
-	def dbscan(self):
-		'TODO: Add description'
-		
-	def expandCluster(self):
-		'TODO: Add description'
-
-# Instantiate a DBSCAN object
-test = DBSCAN("/home/sean/academic/utc/f2012/cpsc_5210/research-project/dataset/noaa-hail-cleaned-index.csv")
-# Import the dataset
-test.importDataSet()
-# Index the dataset
-test.indexDataSet()
-# Calculate the ANN
-test.calculateANN()
+test_dbscan()
