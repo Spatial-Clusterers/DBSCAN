@@ -84,6 +84,7 @@ def dbscan(m, eps, min_points):
 
 def test_dbscan():
     m = np.asmatrix(np.loadtxt('noaa-hail-cleaned-100-coords-dbscan.csv', delimiter=","))
+    print m.shape
     eps = 0.99
     min_points = 4
     # Transpose coordinate matrix

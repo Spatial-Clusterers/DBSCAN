@@ -3,21 +3,28 @@ import sys
 import numpy as np
 
 def importDataSet():
-	'Import the data set into a list of lists.'
+	'Import the data set of size n.'
 
-	dataFile = open("noaa-hail-cleaned-100.csv", 'rt')
-	outFile = open('noaa-hail-cleaned-100-index-coords.csv', 'wb')
-	outFileNoIndex = open('noaa-hail-cleaned-100-coords-dbscan.csv', 'wb')
-
+	# Prompt for the size of the data set
+	print("Enter the number of data points n in the dataset: ")
+	# Assign size
+	dataset_n = raw_input()
+	# Construct file paths for the input and output files
+	input_file_path = "noaa-hail-cleaned-" + str(dataset_n) + ".csv"
+	rtree_out_file_path = "noaa-hail-cleaned-" + str(dataset_n) + "rtree.csv"
+	dbscan_file_path = "noaa-hail-cleaned-" + str(dataset_n) + "dbscan.csv"
+	# Open the file input and output files
+	dataFile = open(file_path, 'rt')
+	outFile = open(rtree_out_file_path, 'wb')
+	outFileNoIndex = open(dbscan_file_path, 'wb')
 
 	# Read lines into list container
 	try:
-		#
+		# The container for the records
 		noaa_hail_data = []
-		#
+		# The container for the coordinates
 		coords = []
-		#
-		#
+		# 
 		reader = csv.reader(dataFile)
 		reader.next()
 		# Add each record to 
